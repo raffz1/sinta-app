@@ -107,7 +107,7 @@
                 <img src="assets/nav.png" alt="Navigasi SINTA" class="w-full max-w-[18rem] h-auto object-contain drop-shadow-[0_5px_15px_rgba(168,85,247,0.7)] animate-[slideUp_0.5s_ease-out]">
             </div>
             
-            <div class="my-auto w-full flex flex-col items-center">
+            <div class="my-auto w-full flex flex-col items-center mt-12">
                 <h1 class="text-[3.5rem] leading-none font-extrabold mb-3 bg-gradient-to-r from-purple-400 via-fuchsia-300 to-purple-400 bg-[length:200%_auto] bg-clip-text text-transparent drop-shadow-lg tracking-tight animate-gradient">SINTA</h1>
                 <h2 class="text-[17px] font-semibold text-purple-200/90 mb-8 leading-relaxed tracking-wide animate-[pulse_4s_ease-in-out_infinite]">Sari Animasi Kesehatan<br>Jantung Talang</h2>
                 
@@ -143,20 +143,20 @@
             <div class="bg-slate-900 border-b border-purple-900/80 shadow-[0_5px_15px_rgba(0,0,0,0.3)] px-5 pt-5 pb-4 z-20 shrink-0">
                 <!-- Top Info -->
                 <div class="flex justify-between items-center mb-4">
-                    <span class="text-[11px] font-bold uppercase tracking-widest text-purple-300 bg-purple-900/30 px-2 py-1 rounded border border-purple-500/20" x-text="'PERTANYAAN ' + (currentQuestionIndex + 1) + ' DARI ' + questions.length"></span>
-                    <span class="text-[11px] font-bold uppercase tracking-widest text-fuchsia-300 bg-fuchsia-900/30 px-2 py-1 rounded border border-fuchsia-500/20" x-text="questions[currentQuestionIndex].type === 'kardio' ? 'KLUSTER KARDIO' : 'KLUSTER MENULAR'"></span>
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-purple-300 bg-purple-900/30 px-2 py-1 rounded border border-purple-500/20" x-text="'PERTANYAAN ' + (currentQuestionIndex + 1) + ' DARI ' + activeQuestions.length"></span>
+                    <span class="text-[11px] font-bold uppercase tracking-widest text-fuchsia-300 bg-fuchsia-900/30 px-2 py-1 rounded border border-fuchsia-500/20" x-text="currentQuestion.type === 'kardio' ? 'KLUSTER KARDIO' : 'KLUSTER MENULAR'"></span>
                 </div>
                 
                 <!-- Navbar Main: Mascot & Title -->
                 <div class="flex items-center gap-4">
                     <img :src="currentMascot" alt="Mascot" class="w-16 h-16 object-contain transition-all duration-300 drop-shadow-[0_5px_10px_rgba(0,0,0,0.5)]" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/bottts/svg?seed=Sinta2'">
-                    <h3 class="font-extrabold text-2xl text-white tracking-tight drop-shadow-md">SINTA: <span class="text-purple-300">Skrining Aktif</span></h3>
+                    <h3 class="font-extrabold text-2xl text-white tracking-tight drop-shadow-md">SINTA: <span class="text-purple-300">Skrining</span></h3>
                 </div>
             </div>
 
             <!-- Progress Line -->
             <div class="w-full bg-slate-800 h-1 shrink-0">
-                <div class="bg-gradient-to-r from-purple-500 to-fuchsia-500 h-full transition-all duration-500 ease-out" :style="'width: ' + ((currentQuestionIndex + 1) / questions.length * 100) + '%'"></div>
+                <div class="bg-gradient-to-r from-purple-500 to-fuchsia-500 h-full transition-all duration-500 ease-out" :style="'width: ' + ((currentQuestionIndex + 1) / activeQuestions.length * 100) + '%'"></div>
             </div>
 
             <!-- PUSAT SIMULASI JANTUNG ANATOMI (Center Stage) -->
@@ -207,26 +207,46 @@
             <!-- PANEL KUESIONER (Keyboard-Style) -->
             <div class="bg-slate-900 rounded-t-[2.5rem] border-t border-purple-800/40 shadow-[0_-15px_40px_rgba(0,0,0,0.6)] p-6 pb-8 z-20 shrink-0 w-full animate-slide-up">
                 <!-- Question Text -->
-                <div class="min-h-[70px] flex items-center mb-6">
-                    <p class="text-[16px] sm:text-[17px] text-white font-medium leading-relaxed" x-text="questions[currentQuestionIndex].text"></p>
+                <div class="min-h-[70px] flex items-center justify-center mb-6">
+                    <p class="text-[16px] sm:text-[17px] text-white font-medium leading-relaxed text-center" x-text="currentQuestion.text"></p>
                 </div>
 
-                <!-- Action Buttons (Flex Row) -->
-                <div class="flex flex-row gap-4">
-                    <button @click="nextQuestion('ya')" 
-                            :disabled="isTransitioning"
-                            :class="(selectedAnswer === 'ya' || isTransitioning) ? 'opacity-50 pointer-events-none' : ''"
-                            class="flex-1 bg-slate-800 border-2 border-slate-700 hover:bg-purple-900/40 hover:border-purple-500 rounded-2xl py-4 transition-all duration-200 font-bold text-white flex items-center justify-center gap-3 active:scale-95 shadow-lg group">
-                        <span class="text-2xl drop-shadow-md group-hover:scale-110 transition-transform">👍</span>
-                        <span class="text-lg tracking-wide">YA</span>
-                    </button>
-                    <button @click="nextQuestion('tidak')" 
-                            :disabled="isTransitioning"
-                            :class="(selectedAnswer === 'tidak' || isTransitioning) ? 'opacity-50 pointer-events-none' : ''"
-                            class="flex-1 bg-slate-800 border-2 border-slate-700 hover:bg-slate-700 hover:border-slate-500 rounded-2xl py-4 transition-all duration-200 font-bold text-white flex items-center justify-center gap-3 active:scale-95 shadow-lg group">
-                        <span class="text-2xl drop-shadow-md group-hover:scale-110 transition-transform">👎</span>
-                        <span class="text-lg tracking-wide">TIDAK</span>
-                    </button>
+                <!-- Action Buttons -->
+                <div class="w-full">
+                    <!-- Standard Ya/Tidak Options -->
+                    <template x-if="!currentQuestion.isCustom">
+                        <div class="flex flex-row gap-4">
+                            <button @click="nextQuestion('ya')" 
+                                    :disabled="isTransitioning"
+                                    :class="(selectedAnswer === 'ya' || isTransitioning) ? 'opacity-50 pointer-events-none' : ''"
+                                    class="flex-1 bg-slate-800 border-2 border-slate-700 hover:bg-purple-900/40 hover:border-purple-500 rounded-2xl py-4 transition-all duration-200 font-bold text-white flex items-center justify-center gap-3 active:scale-95 shadow-lg group">
+                                <span class="text-2xl drop-shadow-md group-hover:scale-110 transition-transform">👍</span>
+                                <span class="text-lg tracking-wide">YA</span>
+                            </button>
+                            <button @click="nextQuestion('tidak')" 
+                                    :disabled="isTransitioning"
+                                    :class="(selectedAnswer === 'tidak' || isTransitioning) ? 'opacity-50 pointer-events-none' : ''"
+                                    class="flex-1 bg-slate-800 border-2 border-slate-700 hover:bg-slate-700 hover:border-slate-500 rounded-2xl py-4 transition-all duration-200 font-bold text-white flex items-center justify-center gap-3 active:scale-95 shadow-lg group">
+                                <span class="text-2xl drop-shadow-md group-hover:scale-110 transition-transform">👎</span>
+                                <span class="text-lg tracking-wide">TIDAK</span>
+                            </button>
+                        </div>
+                    </template>
+
+                    <!-- Custom Options (e.g. Frequency) -->
+                    <template x-if="currentQuestion.isCustom">
+                        <div class="flex flex-col gap-3">
+                            <template x-for="opt in currentQuestion.customOptions">
+                                <button @click="nextQuestion(opt.val)" 
+                                        :disabled="isTransitioning"
+                                        :class="(selectedAnswer === opt.val || isTransitioning) ? 'opacity-50 pointer-events-none' : ''"
+                                        class="w-full bg-slate-800 border-2 border-slate-700 hover:bg-purple-900/40 hover:border-purple-500 rounded-xl py-3 px-5 transition-all duration-200 font-bold text-white flex items-center justify-start gap-4 active:scale-95 shadow-lg group text-left">
+                                    <span class="text-3xl drop-shadow-md group-hover:scale-110 transition-transform" x-text="opt.icon"></span>
+                                    <span class="text-[15px] tracking-wide" x-text="opt.label"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -247,22 +267,27 @@
             </div>
 
             <!-- Results Card -->
-            <div class="bg-slate-900 border border-slate-700/80 rounded-[2rem] p-6 mb-8 w-full relative overflow-hidden shadow-2xl shrink-0">
+            <div class="bg-slate-900 border border-slate-700/80 rounded-[2rem] p-6 mb-8 w-full relative overflow-hidden shadow-2xl shrink-0 flex flex-col">
                 <div class="absolute top-0 left-0 w-2 h-full" :class="resultBgColor()"></div>
                 
                 <div class="flex justify-between items-start mb-5">
                     <div class="text-left">
                         <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Status Anda</p>
-                        <p class="text-[22px] text-white font-black uppercase tracking-wide leading-tight" x-text="resultTitle()"></p>
+                        <p class="text-[20px] text-white font-black uppercase tracking-wide leading-tight" x-text="dynamicResult.title"></p>
                     </div>
-                    <div class="bg-slate-950 rounded-2xl px-4 py-2 border border-slate-800 text-center shadow-inner">
-                        <span class="block text-[10px] text-slate-400 font-medium uppercase tracking-widest mb-1">Poin Risiko</span>
-                        <span class="text-3xl font-black text-white drop-shadow-sm" x-text="totalSkor"></span><span class="text-sm text-slate-500 font-bold">/6</span>
+                    <div class="bg-slate-950 rounded-2xl px-4 py-2 border border-slate-800 text-center shadow-inner shrink-0 ml-2">
+                        <span class="block text-[10px] text-slate-400 font-medium uppercase tracking-widest mb-1">Poin</span>
+                        <span class="text-3xl font-black text-white drop-shadow-sm" x-text="totalSkor"></span>
                     </div>
                 </div>
                 
-                <div class="bg-slate-800/60 rounded-2xl p-5 border border-slate-700/50 shadow-inner">
-                    <p class="text-[15px] text-slate-200 leading-relaxed font-medium text-left" x-text="resultText()"></p>
+                <!-- Dynamic Descriptions -->
+                <div class="w-full flex flex-col gap-3 text-left overflow-y-auto max-h-[30vh] hide-scrollbar pr-1 mt-2">
+                    <template x-for="(desc, index) in dynamicResult.descriptions" :key="index">
+                        <div class="bg-slate-800/80 rounded-xl p-4 border border-slate-700/50 shadow-inner">
+                            <p class="text-[14px] text-slate-200 leading-relaxed font-medium" x-html="formatDesc(desc)"></p>
+                        </div>
+                    </template>
                 </div>
             </div>
 
@@ -288,22 +313,46 @@
             Alpine.data('sintaApp', () => ({
                 step: 1,
                 currentQuestionIndex: 0,
-                skorKardio: 0,
-                skorMenular: 0,
+                answers: {},
                 selectedAnswer: null,
                 isTransitioning: false,
                 
-                questions: [
-                    { type: 'kardio', text: "Apakah Anda sering merokok atau sering mengonsumsi makanan asin/berminyak (gorengan) berlebihan?" },
-                    { type: 'kardio', text: "Apakah Anda jarang berolahraga (kurang dari 30 menit seminggu) atau lebih banyak duduk dalam beraktivitas?" },
-                    { type: 'kardio', text: "Apakah Anda sering merasa dada nyeri/ampek, sesak napas saat berjalan dekat, atau punya riwayat tensi tinggi?" },
-                    { type: 'menular', text: "Apakah Anda atau ada anggota keluarga di rumah yang mengalami batuk tidak sembuh-sembuh lebih dari 2 minggu?" },
-                    { type: 'menular', text: "Apakah di sekitar rumah Anda saat ini terdapat genangan air yang jarang dikuras atau tumpukan barang bekas?" },
-                    { type: 'menular', text: "Apakah sumber air di rumah Anda kurang bersih, atau Anda jarang mencuci tangan pakai sabun sebelum makan?" }
+                allQuestions: [
+                    { id: 'q_rokok', type: 'kardio', text: "Apakah Anda memiliki kebiasaan merokok?" },
+                    { id: 'q_rokok_freq', type: 'kardio', text: "Seberapa sering Anda merokok?", isCustom: true, customOptions: [{label: 'Jarang (1-3 batang/hari)', val: 'jarang', icon: '🚬'}, {label: 'Sering (>3 batang/hari)', val: 'sering', icon: '🔥'}], condition: (ans) => ans.q_rokok === 'ya' },
+                    { id: 'q_gorengan', type: 'kardio', text: "Apakah Anda sering mengonsumsi makanan berminyak atau gorengan?" },
+                    { id: 'q_gorengan_freq', type: 'kardio', text: "Berapa kali Anda makan gorengan?", isCustom: true, customOptions: [{label: 'Jarang (1-3 kali/minggu)', val: 'jarang', icon: '🍟'}, {label: 'Hampir Setiap Hari', val: 'sering', icon: '🍗'}], condition: (ans) => ans.q_gorengan === 'ya' },
+                    { id: 'q_aktivitas', type: 'kardio', text: "Apakah Anda jarang berolahraga (kurang dari 30 menit/minggu) atau lebih banyak duduk saat beraktivitas?" },
+                    { id: 'q_gejala', type: 'kardio', text: "Apakah Anda sering merasa dada nyeri/ampek, sesak napas saat berjalan dekat, atau punya riwayat tensi tinggi?" },
+                    { id: 'q_batuk', type: 'menular', text: "Apakah Anda atau keluarga di rumah mengalami batuk tidak sembuh-sembuh lebih dari 2 minggu?" },
+                    { id: 'q_lingkungan', type: 'menular', text: "Apakah di sekitar rumah Anda terdapat genangan air yang jarang dikuras atau tumpukan barang bekas?" },
+                    { id: 'q_sanitasi', type: 'menular', text: "Apakah sumber air di rumah Anda kurang bersih, atau Anda jarang cuci tangan pakai sabun sebelum makan?" }
                 ],
 
+                get activeQuestions() {
+                    return this.allQuestions.filter(q => !q.condition || q.condition(this.answers));
+                },
+
+                get currentQuestion() {
+                    return this.activeQuestions[this.currentQuestionIndex];
+                },
+
                 get totalSkor() {
-                    return this.skorKardio + this.skorMenular;
+                    let score = 0;
+                    if (this.answers.q_rokok === 'ya') {
+                        if (this.answers.q_rokok_freq === 'jarang') score += 3;
+                        if (this.answers.q_rokok_freq === 'sering') score += 5;
+                    }
+                    if (this.answers.q_gorengan === 'ya') {
+                        if (this.answers.q_gorengan_freq === 'jarang') score += 1;
+                        if (this.answers.q_gorengan_freq === 'sering') score += 2;
+                    }
+                    if (this.answers.q_aktivitas === 'ya') score += 1;
+                    if (this.answers.q_gejala === 'ya') score += 2; // Gejala medis serius
+                    if (this.answers.q_batuk === 'ya') score += 1;
+                    if (this.answers.q_lingkungan === 'ya') score += 1;
+                    if (this.answers.q_sanitasi === 'ya') score += 1;
+                    return score;
                 },
 
                 get currentMascot() {
@@ -362,39 +411,82 @@
                     return 'bg-red-900/50 text-red-300 border-red-500/50';
                 },
 
-                resultTitle() {
+                get dynamicResult() {
+                    let result = { title: '', descriptions: [] };
                     let total = this.totalSkor;
-                    if (total <= 2) return 'ZONA HIJAU (Aman)';
-                    if (total <= 4) return 'ZONA KUNING (Waspada)';
-                    return 'ZONA MERAH (Bahaya)';
-                },
-
-                resultText() {
-                    let total = this.totalSkor;
-                    if (total <= 2) return 'Jantung Anda sehat! Pertahankan pola hidup sehat dan kebersihan rumah Anda.';
-                    if (total <= 4) return 'Wah, Anda harus mulai membatasi rokok/gorengan, luangkan waktu olahraga, dan rutin menguras bak mandi!';
-                    return 'Perhatian! Sistem mendeteksi faktor risiko kesehatan yang tinggi. Yuk, segera bawa brosur ini dan kunjungi Posko KKN Doktor Mengabdi atau Puskesmas terdekat untuk cek tensi gratis!';
-                },
-
-                nextQuestion(answer) {
-                    if (this.isTransitioning) return;
-                    this.isTransitioning = true;
-                    this.selectedAnswer = answer;
-
-                    if (answer === 'ya') {
-                        if (this.questions[this.currentQuestionIndex].type === 'kardio') {
-                            this.skorKardio++;
-                        } else {
-                            this.skorMenular++;
-                        }
+                    
+                    if (total <= 2) result.title = 'ZONA HIJAU (Aman)';
+                    else if (total <= 4) result.title = 'ZONA KUNING (Waspada)';
+                    else result.title = 'ZONA MERAH (Bahaya)';
+                    
+                    if (total === 0) {
+                        result.descriptions.push("✨ **Luar Biasa!** Gaya hidup Anda sangat sehat tanpa ada faktor risiko. Terus pertahankan pola makan seimbang, olahraga teratur, dan kebersihan lingkungan yang baik.");
+                        return result;
                     }
 
-                    // Auto advance after short visual delay
+                    // Rokok
+                    if (this.answers.q_rokok === 'ya') {
+                        if (this.answers.q_rokok_freq === 'sering') {
+                            result.descriptions.push("🚭 **Bahaya Merokok Berat:** Asap rokok sangat merusak pembuluh darah jantung dan paru-paru Anda secara drastis. **Saran:** Segera kurangi dan konsultasikan ke Puskesmas untuk program berhenti merokok.");
+                        } else if (this.answers.q_rokok_freq === 'jarang') {
+                            result.descriptions.push("🚭 **Waspada Merokok:** Walau jarang, rokok tetap memicu penumpukan plak di jantung. **Saran:** Cobalah berhenti sepenuhnya untuk jantung yang lebih lega.");
+                        } else {
+                            result.descriptions.push("🚭 **Peringatan Rokok:** Berhenti merokok adalah hal terbaik untuk kesehatan jantung.");
+                        }
+                    }
+                    
+                    // Gorengan
+                    if (this.answers.q_gorengan === 'ya') {
+                        if (this.answers.q_gorengan_freq === 'sering') {
+                            result.descriptions.push("🍟 **Bahaya Kolesterol:** Konsumsi gorengan harian memicu penyumbatan lemak di pembuluh darah jantung. **Saran:** Batasi maksimal 2 kali seminggu, perbanyak makanan rebus/kukus.");
+                        } else if (this.answers.q_gorengan_freq === 'jarang') {
+                            result.descriptions.push("🍟 **Waspada Gorengan:** Hindari konsumsi minyak berlebih agar tidak terjadi penumpukan lemak jahat.");
+                        }
+                    }
+                    
+                    // Aktivitas
+                    if (this.answers.q_aktivitas === 'ya') {
+                        result.descriptions.push("🏃 **Kurang Gerak:** Otot jantung Anda kurang terlatih. **Saran:** Sempatkan jalan kaki atau aktivitas fisik ringan minimal 30 menit sehari.");
+                    }
+                    
+                    // Gejala Medis
+                    if (this.answers.q_gejala === 'ya') {
+                        result.descriptions.push("⚠️ **Gejala Klinis Terdeteksi:** Nyeri dada dan sesak napas adalah alarm dari jantung! **Saran:** SEGERA periksakan diri ke Puskesmas atau Posko KKN terdekat untuk cek tensi gratis.");
+                    }
+                    
+                    // Menular
+                    if (this.answers.q_batuk === 'ya') {
+                        result.descriptions.push("😷 **Risiko Menular (Pernapasan):** Batuk lebih dari 2 minggu bisa mengindikasikan infeksi paru seperti TBC. **Saran:** Segera periksa ke layanan kesehatan agar mendapat pengobatan dan tidak menular ke keluarga.");
+                    }
+                    
+                    if (this.answers.q_lingkungan === 'ya') {
+                        result.descriptions.push("🦟 **Lingkungan Rawan Penyakit:** Genangan air dan tumpukan barang adalah sarang nyamuk DBD. **Saran:** Terapkan 3M Plus (Menguras, Menutup, Mengubur) secara rutin.");
+                    }
+                    
+                    if (this.answers.q_sanitasi === 'ya') {
+                        result.descriptions.push("🧼 **Sanitasi Kurang:** Kurang kebersihan air dan tangan memicu diare hingga tipes. **Saran:** Biasakan Cuci Tangan Pakai Sabun (CTPS) di bawah air mengalir.");
+                    }
+                    
+                    return result;
+                },
+
+                formatDesc(text) {
+                    return text.replace(/\*\*(.*?)\*\*/g, '<span class="text-fuchsia-300 font-bold">$1</span>');
+                },
+
+                nextQuestion(answerVal) {
+                    if (this.isTransitioning) return;
+                    this.isTransitioning = true;
+                    this.selectedAnswer = answerVal;
+
+                    let qId = this.currentQuestion.id;
+                    this.answers[qId] = answerVal;
+
                     setTimeout(() => {
                         this.selectedAnswer = null;
                         this.isTransitioning = false;
                         
-                        if (this.currentQuestionIndex < this.questions.length - 1) {
+                        if (this.currentQuestionIndex < this.activeQuestions.length - 1) {
                             this.currentQuestionIndex++;
                         } else {
                             this.step = 3;
@@ -405,15 +497,14 @@
                 restart() {
                     this.step = 1;
                     this.currentQuestionIndex = 0;
-                    this.skorKardio = 0;
-                    this.skorMenular = 0;
+                    this.answers = {};
                     this.selectedAnswer = null;
                     this.isTransitioning = false;
                 },
 
                 shareToWA() {
-                    const title = this.resultTitle();
-                    const text = `Ayo cek risiko kesehatan jantung & lingkunganmu dengan SINTA (Sari Animasi Kesehatan Jantung Talang)!\n\n*Hasil skrining saya:*\nTotal Poin Risiko: ${this.totalSkor} (0-6)\nStatus: ${title}\n\nCek sekarang di: ${window.location.href}`;
+                    const title = this.dynamicResult.title;
+                    const text = `Ayo cek risiko kesehatan jantung & lingkunganmu dengan SINTA (Sari Animasi Kesehatan Jantung Talang)!\n\n*Hasil skrining saya:*\nStatus: ${title}\n\nCek sekarang di: ${window.location.href}`;
                     const waUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(text);
                     window.open(waUrl, '_blank');
                 }
